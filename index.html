@@ -362,6 +362,13 @@
   <small id="estGuardado" style="display:block;margin-bottom:4px;font-weight:700"></small>
   <small id="estNube" style="display:block;margin-bottom:8px;font-weight:700;color:#555"></small>
   <button id="btnSalir" class="btn-imprimir" style="display:none;margin-bottom:14px" onclick="cerrarSesion()">🔒 Cerrar sesión</button>
+  <div style="position:sticky;top:0;z-index:5;background:var(--fondo);padding:8px 0">
+    <div style="position:relative">
+      <input id="buscador" type="search" placeholder="🔍 Buscar producto o categoría..." oninput="render()" autocomplete="off" style="width:100%;padding:14px 46px 14px 14px;font-size:1em;border:2px solid #2B4C2E;border-radius:12px">
+      <button id="btnLimpiar" onclick="limpiarBusqueda()" style="display:none;position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.4em;padding:8px;color:#2B4C2E">✕</button>
+    </div>
+    <small id="resBusqueda" style="display:block;color:#555;margin-top:4px;font-weight:700"></small>
+  </div>
   <div id="listaProductos"></div>
 
   <h3 class="seccion">📋 Historial de bolsas finalizadas</h3>
@@ -543,6 +550,8 @@ function imprimirListado(){
   Promise.all([...document.querySelectorAll('#hojaTabla img')].map(i=>i.decode?i.decode().catch(()=>{}):0)).then(()=>window.print());
 }
 
+const normB=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ');
+function limpiarBusqueda(){const b=document.getElementById('buscador');b.value='';render();b.focus()}
 let editId=null;
 function limpiarForm(){['inNombre','inCategoria','inCantidad','inCosto'].forEach(i=>document.getElementById(i).value='');fotoNueva='';document.getElementById('inFoto').value='';document.getElementById('prevFoto').style.display='none';document.getElementById('txtFoto').textContent='Subir foto';document.getElementById('tituloForm').textContent='📦 Cargar producto nuevo';document.getElementById('btnGuardar').textContent='Calcular y Guardar';document.getElementById('btnCancelar').style.display='none'}
 function cancelarEdicion(){editId=null;limpiarForm()}
@@ -559,10 +568,17 @@ function actualizarCats(){const d=document.getElementById('listaCats');if(!d)ret
 
 function render(){
   const lista = document.getElementById('listaProductos');
+  const bq = document.getElementById('buscador'), q = bq ? normB(bq.value) : '';
+  const vis = q ? estado.productos.filter(p => { const t = normB(p.nombre+' '+(p.categoria||'')); return q.split(' ').every(w => t.includes(w)); }) : estado.productos;
+  const rb = document.getElementById('resBusqueda'), bl = document.getElementById('btnLimpiar');
+  if(rb) rb.textContent = q ? vis.length+' de '+estado.productos.length+' productos' : '';
+  if(bl) bl.style.display = q ? 'block' : 'none';
   if(estado.productos.length === 0){
     lista.innerHTML = '<div class="vacio">🌻 No hay productos cargados en stock.</div>';
+  } else if(vis.length === 0){
+    lista.innerHTML = '<div class="vacio">🔍 No se encontró ningún producto con esa búsqueda.</div>';
   } else {
-    lista.innerHTML = agrupar(estado.productos).map(g => `<h3 class="seccion">🏷️ ${escH(g.cat)} (${g.items.length})</h3>` + g.items.map(p => `
+    lista.innerHTML = agrupar(vis).map(g => `<h3 class="seccion">🏷️ ${escH(g.cat)} (${g.items.length})</h3>` + g.items.map(p => `
       <div class="producto">
         <div class="nombre">
           <span>${getFoto(p.nombre)?`<img class="mini" src="${getFoto(p.nombre)}">`:''}${escH(p.nombre)}</span>
