@@ -360,8 +360,7 @@
   <input type="file" id="impTodo" accept=".json" hidden onchange="restaurarTodo(this)">
   <small id="ultResp" style="display:block;margin-bottom:6px;color:#555"></small>
   <small id="estGuardado" style="display:block;margin-bottom:4px;font-weight:700"></small>
-  <small id="estNube" style="display:block;margin-bottom:8px;font-weight:700;color:#555"></small>
-  <button id="btnSalir" class="btn-imprimir" style="display:none;margin-bottom:14px" onclick="cerrarSesion()">🔒 Cerrar sesión</button>
+  <small id="estNube" style="display:block;margin-bottom:14px;font-weight:700;color:#555"></small>
   <div style="position:sticky;top:0;z-index:5;background:var(--fondo);padding:8px 0">
     <div style="position:relative">
       <input id="buscador" type="search" placeholder="🔍 Buscar producto o categoría..." oninput="render()" autocomplete="off" style="width:100%;padding:14px 46px 14px 14px;font-size:1em;border:2px solid #2B4C2E;border-radius:12px">
@@ -376,6 +375,7 @@
     <summary>Ver historial</summary>
     <div id="listaHistorial" style="margin-top:10px;"></div>
   </details>
+  <button id="btnSalir" class="btn-imprimir" style="display:none;margin-top:30px;margin-bottom:20px;opacity:.75" onclick="cerrarSesion()">🔒 Cerrar sesión</button>
 
 </div>
 </div>
@@ -768,19 +768,24 @@ function restaurarTodo(inp){const f=inp.files[0];if(!f)return;const r=new FileRe
 mostrarResp();
 if('serviceWorker' in navigator && location.protocol.indexOf('http')===0) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
-<div id="login" style="display:none;position:fixed;inset:0;z-index:99999;background:#fff;align-items:center;justify-content:center;padding:20px">
- <div style="width:100%;max-width:340px;text-align:center">
-  <img src="icon-192.png" alt="" style="width:120px;height:120px;border-radius:50%">
-  <h2 style="color:#2B4C2E;margin:10px 0 18px">Forrajería y Dietética Iván</h2>
-  <input id="lgMail" type="email" placeholder="Correo" autocomplete="username" style="width:100%;padding:14px;font-size:1em;border:2px solid #2B4C2E;border-radius:12px;margin-bottom:10px">
-  <input id="lgPass" type="password" placeholder="Contraseña" autocomplete="current-password" style="width:100%;padding:14px;font-size:1em;border:2px solid #2B4C2E;border-radius:12px;margin-bottom:12px">
-  <button id="btnEntrar" style="width:100%;padding:14px;background:#2B4C2E;color:#fff;border:0;border-radius:12px;font-size:1.1em;font-weight:800">Entrar</button>
-  <p id="msgLogin" style="color:#C0392B;font-weight:700;min-height:1.4em"></p>
- </div>
+<div id="login" style="display:none;position:fixed;inset:0;z-index:99999;background:#fff;align-items:center;justify-content:center;padding:20px;overflow:auto">
+ <form id="frmLogin" style="width:100%;max-width:340px;text-align:center">
+  <img src="icon-192.png" alt="" style="width:110px;height:110px;border-radius:50%">
+  <h2 style="color:#2B4C2E;margin:10px 0 6px">Forrajería y Dietética Iván</h2>
+  <p style="color:#555;margin:0 0 16px">Entrás una sola vez. Después abrís la app tocando el ícono.</p>
+  <input id="lgMail" type="email" inputmode="email" autocapitalize="off" placeholder="Correo" autocomplete="username" style="width:100%;padding:14px;font-size:1.05em;border:2px solid #2B4C2E;border-radius:12px;margin-bottom:10px">
+  <div style="position:relative;margin-bottom:12px">
+    <input id="lgPass" type="password" placeholder="Contraseña" autocomplete="current-password" style="width:100%;padding:14px 54px 14px 14px;font-size:1.05em;border:2px solid #2B4C2E;border-radius:12px">
+    <button id="btnVer" type="button" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:1.4em;padding:8px">👁️</button>
+  </div>
+  <button id="btnEntrar" type="submit" style="width:100%;padding:15px;background:#2B4C2E;color:#fff;border:0;border-radius:12px;font-size:1.15em;font-weight:800">Entrar</button>
+  <p id="msgLogin" style="color:#C0392B;font-weight:700;min-height:1.4em;margin:12px 0 4px"></p>
+  <button id="btnOlvide" type="button" style="background:none;border:0;color:#2B4C2E;text-decoration:underline;font-size:1em;padding:10px">Olvidé mi contraseña</button>
+ </form>
 </div>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,deleteDoc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const app=initializeApp({apiKey:"AIzaSyB3w4tJ7C1wkcOTt83MrUUzQpi3zCsMbe4",authDomain:"forrajeriaivan.firebaseapp.com",projectId:"forrajeriaivan",storageBucket:"forrajeriaivan.firebasestorage.app",messagingSenderId:"1072002688300",appId:"1:1072002688300:web:9d24185c7f3ab9851d3889"});
 const auth=getAuth(app);
@@ -825,17 +830,30 @@ function escuchar(){
     estado.historial=l;rec.hist=true;chk();aplicar();
   },fallo));
 }
-$('btnEntrar').onclick=async()=>{
-  $('msgLogin').textContent='';
-  try{await signInWithEmailAndPassword(auth,$('lgMail').value.trim(),$('lgPass').value)}
-  catch(e){$('msgLogin').textContent=e.code==='auth/network-request-failed'?'Sin internet: conectate para entrar':'Correo o contraseña incorrectos'}
+const ERR={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'Ese correo no está registrado','auth/invalid-email':'El correo no es válido','auth/too-many-requests':'Demasiados intentos. Esperá unos minutos o tocá "Olvidé mi contraseña"','auth/network-request-failed':'Sin internet: conectate para entrar'};
+try{const m=localStorage.getItem('ivan_mail');if(m)$('lgMail').value=m}catch(e){}
+$('frmLogin').onsubmit=async ev=>{
+  ev.preventDefault();const e=$('msgLogin');e.style.color='#C0392B';e.textContent='';
+  const mail=$('lgMail').value.trim(),pass=$('lgPass').value;
+  if(!mail||!pass){e.textContent='Escribí el correo y la contraseña';return}
+  $('btnEntrar').disabled=true;$('btnEntrar').textContent='Entrando...';
+  try{await signInWithEmailAndPassword(auth,mail,pass);try{localStorage.setItem('ivan_mail',mail)}catch(x){}}
+  catch(x){e.textContent=ERR[x.code]||'No se pudo entrar. Probá de nuevo'}
+  $('btnEntrar').disabled=false;$('btnEntrar').textContent='Entrar';
 };
-window.cerrarSesion=()=>signOut(auth);
+$('btnVer').onclick=()=>{const p=$('lgPass'),v=p.type==='password';p.type=v?'text':'password';$('btnVer').textContent=v?'🙈':'👁️'};
+$('btnOlvide').onclick=async()=>{
+  const m=$('lgMail').value.trim(),e=$('msgLogin');e.style.color='#C0392B';
+  if(!m){e.textContent='Escribí tu correo arriba y tocá de nuevo';return}
+  try{await sendPasswordResetEmail(auth,m);e.style.color='#2B4C2E';e.textContent='Listo: te mandamos un correo para crear una contraseña nueva. Mirá también en Spam'}
+  catch(x){e.textContent=ERR[x.code]||'No se pudo enviar el correo'}
+};
+window.cerrarSesion=()=>{if(confirm('¿Cerrar sesión? Después vas a tener que escribir de nuevo el correo y la contraseña.'))signOut(auth)};
 window.addEventListener('online',()=>listo&&chk());
 window.addEventListener('offline',()=>listo&&chk());
 onAuthStateChanged(auth,u=>{
   if(u){$('login').style.display='none';$('btnSalir').style.display='block';$('lgPass').value='';escuchar()}
-  else{desuscribir();listo=false;rec={prod:false,foto:false,hist:false};ult.prod.clear();ult.foto.clear();ult.hist='';msgNube('',true);$('btnSalir').style.display='none';$('login').style.display='flex'}
+  else{desuscribir();listo=false;rec={prod:false,foto:false,hist:false};ult.prod.clear();ult.foto.clear();ult.hist='';msgNube('',true);$('btnSalir').style.display='none';$('login').style.display='flex';setTimeout(()=>($('lgMail').value?$('lgPass'):$('lgMail')).focus(),150)}
 });
 </script>
 </body>

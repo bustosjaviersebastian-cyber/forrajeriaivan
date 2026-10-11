@@ -1,5 +1,5 @@
 // Subí V cada vez que actualices la app, para que se descarte la copia vieja
-const V = 'forrajeria-ivan-v3';
+const V = 'forrajeria-ivan-v4';
 const BASE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(BASE))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
