@@ -312,7 +312,17 @@
 .lb{display:flex;gap:6px;flex-wrap:wrap}
 .lb button,.lbar button{padding:8px 10px;border-radius:10px;border:2px solid var(--verde-medio);background:#fff;font-weight:700;color:var(--verde-oscuro)}
 .lbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.costo{background:#FFF6CC;border:2px solid #F4D03F;border-radius:12px;padding:9px 11px;margin-top:8px;font-size:.92em;font-weight:600;color:#5A2A0A}.costo div{font-weight:500;margin-top:3px}.mini{width:44px;height:44px;object-fit:cover;border-radius:10px;vertical-align:middle;margin-right:8px;border:2px solid #F4D03F}.btn-foto{background:var(--amarillo-suave,#FFF6CC);color:var(--marron,#5A2A0A);border:2px dashed #F4B400;padding:11px;border-radius:12px;font-weight:700;cursor:pointer;text-align:center}.hoja-cat{font-size:1.3em;font-weight:900;color:#fff;background:#2B4C2E;padding:6px 12px;margin-top:14px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-after:avoid}</style>
+.costo{background:#FFF6CC;border:2px solid #F4D03F;border-radius:12px;padding:9px 11px;margin-top:8px;font-size:.92em;font-weight:600;color:#5A2A0A}.costo div{font-weight:500;margin-top:3px}.mini{width:44px;height:44px;object-fit:cover;border-radius:10px;vertical-align:middle;margin-right:8px;border:2px solid #F4D03F}.btn-foto{background:var(--amarillo-suave,#FFF6CC);color:var(--marron,#5A2A0A);border:2px dashed #F4B400;padding:11px;border-radius:12px;font-weight:700;cursor:pointer;text-align:center}.hoja-cat{font-size:1.3em;font-weight:900;color:#fff;background:#2B4C2E;padding:6px 12px;margin-top:14px;border-radius:6px;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-after:avoid}.tabla-wrap{overflow-x:auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(43,76,46,.15)}
+table.planilla{border-collapse:collapse;min-width:760px;width:100%;font-size:.9em}
+table.planilla th,table.planilla td{padding:8px 8px;border-bottom:1px solid #e6e6e6;text-align:left;vertical-align:middle;white-space:nowrap}
+table.planilla th{background:#2B4C2E;color:#F4D03F;font-size:.85em}
+table.planilla .c1{position:sticky;left:0;z-index:2;min-width:58px;max-width:58px;overflow:hidden;background:#fff}
+table.planilla .c2{position:sticky;left:58px;z-index:2;min-width:150px;white-space:normal;background:#fff;box-shadow:2px 0 4px rgba(0,0,0,.08)}
+table.planilla th.c1,table.planilla th.c2{background:#2B4C2E;z-index:3}
+table.planilla tr.cat td{background:#FCF3CF;font-weight:800;color:#2B4C2E;position:static}
+table.planilla .pv{color:#D00000}
+table.planilla .sin{color:#C0392B;font-weight:800}
+table.planilla .acc button{border:0;background:none;font-size:1.3em;padding:6px}</style>
 </head>
 <body>
 
@@ -336,12 +346,44 @@
       <datalist id="listaCats"></datalist>
     </div>
     <div class="campo">
+      <label>Código (opcional, si lo dejás vacío se genera solo)</label>
+      <input type="text" id="inCodigo" placeholder="Ej: 0001 o código de barras" autocomplete="off">
+    </div>
+    <div class="campo">
+      <label>Proveedor</label>
+      <input type="text" id="inProveedor" list="listaProv" placeholder="Ej: Distribuidora Norte" autocomplete="off">
+      <datalist id="listaProv"></datalist>
+    </div>
+    <div class="campo">
       <label>Cantidad en la bolsa / bulto (kg o unidades)</label>
-      <input type="number" id="inCantidad" placeholder="Ej: 25" step="0.01" inputmode="decimal">
+      <input type="number" id="inCantidad" placeholder="Ej: 25" step="0.01" inputmode="decimal" oninput="recalc('costo')">
     </div>
     <div class="campo">
       <label>Costo total pagado por la bolsa / bulto ($)</label>
-      <input type="number" id="inCosto" placeholder="Ej: 20000" step="1" inputmode="decimal">
+      <input type="number" id="inCosto" placeholder="Ej: 20000" step="1" inputmode="decimal" oninput="recalc('costo')">
+    </div>
+    <div class="campo">
+      <label>Venta por BOLSA: ganancia % sobre el costo ↔ precio de venta ($)</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="inPctB" value="25" step="any" inputmode="decimal" placeholder="%" style="flex:1;min-width:0" oninput="recalc('pctB')">
+        <input type="number" id="inPrecioB" step="any" inputmode="decimal" placeholder="Precio bolsa $" style="flex:2;min-width:0" oninput="recalc('prB')">
+      </div>
+      <small id="infoB" style="color:#555"></small>
+    </div>
+    <div class="campo">
+      <label>Venta SUELTO por kg: ganancia % ↔ precio de venta ($)</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="inPctS" value="50" step="any" inputmode="decimal" placeholder="%" style="flex:1;min-width:0" oninput="recalc('pctS')">
+        <input type="number" id="inPrecioS" step="any" inputmode="decimal" placeholder="Precio kg $" style="flex:2;min-width:0" oninput="recalc('prS')">
+      </div>
+      <small id="infoS" style="color:#555"></small>
+    </div>
+    <div class="campo">
+      <label>Stock actual: bolsas cerradas y kg sueltos</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="inBolsas" step="1" inputmode="numeric" placeholder="Bolsas cerradas" style="flex:1;min-width:0">
+        <input type="number" id="inSuelto" step="any" inputmode="decimal" placeholder="Kg sueltos" style="flex:1;min-width:0">
+      </div>
     </div>
     <div class="campo"><label>Foto del producto (opcional)</label>
       <label class="fbtn">📷 <span id="txtFoto">Subir foto</span><input type="file" id="inFoto" accept="image/*" hidden onchange="fotoProd(this)"></label>
@@ -467,20 +509,25 @@ function agregarProducto(){
     return;
   }
 
-  // Cálculos de costo y precios de venta
   const costoKg = costoTotal / cantidad;
-  
-  // Venta por Bulto Cerrado (Margen 25%)
-  const precioVentaBulto = costoTotal * 1.25;
-  
-  // Venta Suelto por Kg (Margen 50%)
-  const precioVentaKgSuelto = costoKg * 1.50;
+  const pctB0 = parseFloat(elv('inPctB').value), pctS0 = parseFloat(elv('inPctS').value);
+  let precioVentaBulto = parseFloat(elv('inPrecioB').value), precioVentaKgSuelto = parseFloat(elv('inPrecioS').value);
+  if(!(precioVentaBulto > 0)) precioVentaBulto = costoTotal * (1 + (isNaN(pctB0) ? 25 : pctB0) / 100);
+  if(!(precioVentaKgSuelto > 0)) precioVentaKgSuelto = costoKg * (1 + (isNaN(pctS0) ? 50 : pctS0) / 100);
+  const pctBulto = (precioVentaBulto / costoTotal - 1) * 100, pctSuelto = (precioVentaKgSuelto / costoKg - 1) * 100;
+  const proveedor = elv('inProveedor').value.trim();
+  const pe = editId !== null ? estado.productos.find(q => q.id === editId) : null;
+  let codigo = elv('inCodigo').value.trim();
+  if(codigo && estado.productos.some(x => x.id !== editId && String(x.codigo||'').toLowerCase() === codigo.toLowerCase())){ alert('Ese código ya lo tiene otro producto.'); return; }
+  if(!codigo) codigo = (pe && pe.codigo) ? pe.codigo : nuevoCodigo();
+  const nb = parseFloat(elv('inBolsas').value), ns = parseFloat(elv('inSuelto').value);
+  const bolsas = isNaN(nb) ? undefined : nb, sueltoKg = isNaN(ns) ? undefined : ns;
 
   if(editId !== null){
     const p = estado.productos.find(q => q.id === editId);
     if(p){
       const kv = kf(p.nombre), kn2 = kf(nombre);
-      Object.assign(p,{nombre,categoria,cantidad,costoKg,costoTotal,precioVentaBulto,precioVentaKgSuelto});
+      Object.assign(p,{nombre,categoria,codigo,proveedor,cantidad,costoKg,costoTotal,precioVentaBulto,precioVentaKgSuelto,pctBulto,pctSuelto,bolsas,sueltoKg});
       if(kv !== kn2 && estado.fotos[kv] && !estado.fotos[kn2]) estado.fotos[kn2] = estado.fotos[kv];
       if(fotoNueva) estado.fotos[kn2] = fotoNueva;
     }
@@ -489,23 +536,17 @@ function agregarProducto(){
 
   estado.productos.push({
     id: Date.now(),
-    nombre, categoria, 
-    cantidad, 
-    costoKg, 
-    costoTotal,
-    precioVentaBulto,
-    precioVentaKgSuelto,
+    nombre, categoria, codigo, proveedor,
+    cantidad, costoKg, costoTotal,
+    precioVentaBulto, precioVentaKgSuelto, pctBulto, pctSuelto,
+    bolsas, sueltoKg,
     fecha: new Date().toISOString()
   });
   const kn = kf(nombre), tf = !!fotoNueva;
   if(tf) estado.fotos[kn] = fotoNueva;
 
-  document.getElementById('inNombre').value = '';
-  document.getElementById('inCantidad').value = '';
-  document.getElementById('inCosto').value = '';
-  fotoNueva = ''; document.getElementById('inFoto').value = '';
-  document.getElementById('prevFoto').style.display = 'none';
-  document.getElementById('txtFoto').textContent = 'Subir foto';
+  const _c = elv('inCategoria').value, _pv = elv('inProveedor').value;
+  limpiarForm(); elv('inCategoria').value = _c; elv('inProveedor').value = _pv;
 
   if(!guardarEstado() && tf){ delete estado.fotos[kn]; guardarEstado(); }
   render();
@@ -552,10 +593,25 @@ function imprimirListado(){
 
 const normB=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ');
 function limpiarBusqueda(){const b=document.getElementById('buscador');b.value='';render();b.focus()}
+const elv=id=>document.getElementById(id);
+const fmtN=(n,d=2)=>String(Math.round(n*Math.pow(10,d))/Math.pow(10,d));
+function nuevoCodigo(){const n=estado.productos.map(p=>parseInt(p.codigo,10)).filter(x=>!isNaN(x));return String((n.length?Math.max(...n):0)+1).padStart(4,'0')}
+function actualizarProv(){const d=elv('listaProv');if(!d)return;const c=[...new Set(estado.productos.map(p=>(p.proveedor||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));d.innerHTML=c.map(x=>`<option value="${escH(x)}">`).join('')}
+function recalc(o){
+  const cT=parseFloat(elv('inCosto').value), cant=parseFloat(elv('inCantidad').value), ok=cT>0&&cant>0, cK=ok?cT/cant:0;
+  const pB=parseFloat(elv('inPctB').value), pS=parseFloat(elv('inPctS').value);
+  if(o==='pctB'||o==='costo') elv('inPrecioB').value=(ok&&!isNaN(pB))?fmtN(cT*(1+pB/100)):'';
+  if(o==='pctS'||o==='costo') elv('inPrecioS').value=(ok&&!isNaN(pS))?fmtN(cK*(1+pS/100)):'';
+  if(o==='prB'){const v=parseFloat(elv('inPrecioB').value);if(ok&&v>0)elv('inPctB').value=fmtN((v/cT-1)*100)}
+  if(o==='prS'){const v=parseFloat(elv('inPrecioS').value);if(ok&&v>0)elv('inPctS').value=fmtN((v/cK-1)*100)}
+  const vB=parseFloat(elv('inPrecioB').value), vS=parseFloat(elv('inPrecioS').value);
+  elv('infoB').textContent=(ok&&vB>0)?'Ganancia por bolsa: '+formatoMoneda(vB-cT)+' · margen sobre la venta: '+fmtN((vB-cT)/vB*100,1)+'%':'';
+  elv('infoS').textContent=(ok&&vS>0)?'Ganancia por kg: '+formatoMoneda(vS-cK)+' · margen sobre la venta: '+fmtN((vS-cK)/vS*100,1)+'%':'';
+}
 let editId=null;
-function limpiarForm(){['inNombre','inCategoria','inCantidad','inCosto'].forEach(i=>document.getElementById(i).value='');fotoNueva='';document.getElementById('inFoto').value='';document.getElementById('prevFoto').style.display='none';document.getElementById('txtFoto').textContent='Subir foto';document.getElementById('tituloForm').textContent='📦 Cargar producto nuevo';document.getElementById('btnGuardar').textContent='Calcular y Guardar';document.getElementById('btnCancelar').style.display='none'}
+function limpiarForm(){['inNombre','inCategoria','inCodigo','inProveedor','inCantidad','inCosto','inPrecioB','inPrecioS','inBolsas','inSuelto'].forEach(i=>document.getElementById(i).value='');elv('inPctB').value=25;elv('inPctS').value=50;elv('infoB').textContent='';elv('infoS').textContent='';fotoNueva='';document.getElementById('inFoto').value='';document.getElementById('prevFoto').style.display='none';document.getElementById('txtFoto').textContent='Subir foto';document.getElementById('tituloForm').textContent='📦 Cargar producto nuevo';document.getElementById('btnGuardar').textContent='Calcular y Guardar';document.getElementById('btnCancelar').style.display='none'}
 function cancelarEdicion(){editId=null;limpiarForm()}
-function editarProducto(id){const p=estado.productos.find(q=>q.id===id);if(!p)return;limpiarForm();editId=id;document.getElementById('inNombre').value=p.nombre;document.getElementById('inCategoria').value=p.categoria||'';document.getElementById('inCantidad').value=p.cantidad;document.getElementById('inCosto').value=p.costoTotal;const f=getFoto(p.nombre),v=document.getElementById('prevFoto');if(f){v.src=f;v.style.display='block';document.getElementById('txtFoto').textContent='Cambiar foto'}document.getElementById('tituloForm').textContent='✏️ Editando: '+p.nombre;document.getElementById('btnGuardar').textContent='Guardar cambios';document.getElementById('btnCancelar').style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
+function editarProducto(id){const p=estado.productos.find(q=>q.id===id);if(!p)return;limpiarForm();editId=id;document.getElementById('inNombre').value=p.nombre;document.getElementById('inCategoria').value=p.categoria||'';document.getElementById('inCantidad').value=p.cantidad;document.getElementById('inCosto').value=p.costoTotal;elv('inCodigo').value=p.codigo||'';elv('inProveedor').value=p.proveedor||'';elv('inBolsas').value=p.bolsas===undefined?'':p.bolsas;elv('inSuelto').value=p.sueltoKg===undefined?'':p.sueltoKg;elv('inPctB').value=fmtN(p.pctBulto!==undefined?p.pctBulto:(p.precioVentaBulto/p.costoTotal-1)*100);elv('inPrecioB').value=fmtN(p.precioVentaBulto);elv('inPctS').value=fmtN(p.pctSuelto!==undefined?p.pctSuelto:(p.precioVentaKgSuelto/p.costoKg-1)*100);elv('inPrecioS').value=fmtN(p.precioVentaKgSuelto);recalc('info');const f=getFoto(p.nombre),v=document.getElementById('prevFoto');if(f){v.src=f;v.style.display='block';document.getElementById('txtFoto').textContent='Cambiar foto'}document.getElementById('tituloForm').textContent='✏️ Editando: '+p.nombre;document.getElementById('btnGuardar').textContent='Guardar cambios';document.getElementById('btnCancelar').style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
 const SIN_CAT='Sin categoría';
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 const mismaCat=(a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})===0;
@@ -578,42 +634,26 @@ function render(){
   } else if(vis.length === 0){
     lista.innerHTML = '<div class="vacio">🔍 No se encontró ningún producto con esa búsqueda.</div>';
   } else {
-    lista.innerHTML = agrupar(vis).map(g => `<h3 class="seccion">🏷️ ${escH(g.cat)} (${g.items.length})</h3>` + g.items.map(p => `
-      <div class="producto">
-        <div class="nombre">
-          <span>${getFoto(p.nombre)?`<img class="mini" src="${getFoto(p.nombre)}">`:''}${escH(p.nombre)}</span>
-          <span class="cantidad-chip">Bolsa: ${p.cantidad} kg</span>
-        </div>
-        <div class="grid-datos">
-          <div class="dato">
-            <div class="lbl">Costo Bulto</div>
-            <div class="val">${formatoMoneda(p.costoTotal)}</div>
-          </div>
-          <div class="dato">
-            <div class="lbl">Costo x Kg</div>
-            <div class="val">${formatoMoneda(p.costoKg)}</div>
-          </div>
-          <div class="dato venta-bulto">
-            <div class="lbl">Venta Bolsa (+25%)</div>
-            <div class="val">${formatoMoneda(p.precioVentaBulto)}</div>
-          </div>
-          <div class="dato venta-suelto">
-            <div class="lbl">Venta Suelto Kg (+50%)</div>
-            <div class="val">${formatoMoneda(p.precioVentaKgSuelto)}</div>
-          </div>
-        </div>
-        <div class="fila-botones">
-          <label class="btn-foto">📷 ${getFoto(p.nombre)?'Cambiar':'Foto'}<input type="file" accept="image/*" hidden onchange="fotoExistente(${p.id},this)"></label>
-          <button class="btn-borrar" title="Editar producto" onclick="editarProducto(${p.id})">✏️</button>
-          <button class="btn-borrar" title="Cambiar categoría" onclick="cambiarCategoria(${p.id})">🏷️</button>
-          <button class="btn-agotado" onclick="marcarAgotado(${p.id})">✅ Bolsa Agotada</button>
-          <button class="btn-borrar" onclick="borrarProducto(${p.id})">✕</button>
-        </div>
-      </div>
-    `).join('')).join('');
+    const fila = p => {
+      const f = getFoto(p.nombre), sc = p.bolsas === undefined && p.sueltoKg === undefined, cero = !sc && !(p.bolsas > 0) && !(p.sueltoKg > 0);
+      const pb = p.pctBulto !== undefined ? p.pctBulto : (p.precioVentaBulto / p.costoTotal - 1) * 100;
+      const ps = p.pctSuelto !== undefined ? p.pctSuelto : (p.precioVentaKgSuelto / p.costoKg - 1) * 100;
+      return `<tr>
+        <td class="c1">${escH(p.codigo || '—')}</td>
+        <td class="c2">${f ? `<img class="mini" style="width:34px;height:34px;margin-right:6px" src="${f}">` : ''}${escH(p.nombre)}</td>
+        <td>Bolsa ${formatoMoneda(p.costoTotal)}<br><small>Kg ${formatoMoneda(p.costoKg)}</small></td>
+        <td><b class="pv">Bolsa ${formatoMoneda(p.precioVentaBulto)}</b> <small>(+${fmtN(pb,1)}%)</small><br><b class="pv">Kg ${formatoMoneda(p.precioVentaKgSuelto)}</b> <small>(+${fmtN(ps,1)}%)</small></td>
+        <td>${sc ? '<small>— cargar</small>' : cero ? '<span class="sin">SIN STOCK</span>' : (p.bolsas || 0) + ' bolsas<br><small>' + fmtN(p.sueltoKg || 0) + ' kg sueltos</small>'}</td>
+        <td>${escH(p.proveedor || '—')}</td>
+        <td class="acc"><button title="Editar" onclick="editarProducto(${p.id})">✏️</button><button title="Eliminar" onclick="borrarProducto(${p.id})">🗑️</button></td>
+      </tr>`;
+    };
+    lista.innerHTML = `<div class="tabla-wrap"><table class="planilla"><thead><tr><th class="c1">Cód.</th><th class="c2">Descripción</th><th>Costo</th><th>Precio de venta</th><th>Stock</th><th>Proveedor</th><th></th></tr></thead><tbody>`
+      + agrupar(vis).map(g => `<tr class="cat"><td colspan="7">🏷️ ${escH(g.cat)} (${g.items.length})</td></tr>` + g.items.map(fila).join('')).join('')
+      + `</tbody></table></div>`;
   }
 
-  actualizarCats();estadoGuardado();
+  actualizarCats();actualizarProv();estadoGuardado();
   const hist = document.getElementById('listaHistorial');
   if(estado.historial.length === 0){
     hist.innerHTML = '<div class="vacio">Sin bolsas finalizadas aún.</div>';
